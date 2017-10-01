@@ -12,9 +12,10 @@ DigitalOut multiPin3(D13);
 AnalogIn readLight(A0);
 float toCM[15]={16.2,15.7,13.8,12.9,11.6,11.1,10.6,10.0,9.2,7.4,6.5,5.8,4.4,3.8,3.1};
 float tmp[15];
+float oldTmp[15];
 float minus[14];
 
-float getDepth(){
+float getDepth_step(){
         trig = 1;
         wait(0.00001); // 10 us TTL wave
         trig = 0;
@@ -24,10 +25,15 @@ float getDepth(){
         t.stop();
         float val;
         if(t.read()<0.06f)val=t.read()*17160;
-        wait(0.1);
+        wait(0.01);
         t.reset();
         return val;
         }
+float getDepth(){
+        float oldDepth=0.0;
+        for(int i=0;i<10;++i){oldDepth+=getDepth_step();}
+        return oldDepth/10.0;
+    }
 float toMulti(int num){
     if(num<0)num=0;
     if(num>14)num=14;
@@ -39,20 +45,13 @@ float toMulti(int num){
     num=num/2;
     multiPin3=num%2;
     wait(0.05);
-    //printf("%f\n",readLight.read());    
+    //printf("%f\n",readLight.read());
     return readLight.read();
-    }
-float getDepth_LED(){
-    for(int i=14;i>0;--i){
-        if(toMulti(i)<0.15f){
-            return toCM[i-1];
-        }
-    }
-    return 17.5;
     }
 
 void fillWater(float maximum){
     while(getDepth()>maximum){
+        if(getDepth()>16.0)return;
         faucet=1;
         printf("current water level:%.3f      target:%.3f\n\r",getDepth(),maximum);
         }

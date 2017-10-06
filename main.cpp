@@ -1,8 +1,8 @@
 #include "mbed.h"
 
 Timer t;
-DigitalIn echo(D9);
-DigitalOut trig(D8);
+DigitalIn echo(D8);
+DigitalOut trig(D9);
 DigitalOut LED(D7);
 DigitalOut faucet(D6);
 DigitalOut multiPin0(D10);
@@ -24,15 +24,18 @@ float getDepth_step(){
         while(echo.read()!=0){}
         t.stop();
         float val;
-        if(t.read()<0.06f)val=t.read()*17160;
+        if(t.read()<0.15f)val=t.read()*17160;
+        printf("%f\n",val);
         wait(0.01);
         t.reset();
         return val;
         }
 float getDepth(){
-        float oldDepth=0.0;
-        for(int i=0;i<10;++i){oldDepth+=getDepth_step();}
-        return oldDepth/10.0;
+        //float oldDepth=0.0;
+        //for(int i=0;i<10;++i){oldDepth+=getDepth_step();}
+        //return oldDepth/10.0f;
+        printf("TEST");
+        return getDepth_step();
     }
 float toMulti(int num){
     if(num<0)num=0;
@@ -51,7 +54,7 @@ float toMulti(int num){
 
 void fillWater(float maximum){
     while(getDepth()>maximum){
-        if(getDepth()>16.0)return;
+        if(getDepth()>18.5f)return;
         faucet=1;
         printf("current water level:%.3f      target:%.3f\n\r",getDepth(),maximum);
         }
@@ -61,7 +64,7 @@ void eighty(float maximum){
     fillWater(maximum*1.0f);}
 void create(){
     for(int i=14;i>=0;--i)tmp[i]=toMulti(i);
-    //for(int i=0;i<15;++i)printf("check:%f\n",tmp[i]);
+    for(int i=0;i<15;++i)printf("check:%f\n",tmp[i]);
     for(int i=0;i<14;++i)minus[i]=tmp[i+1]-tmp[i];
     }
     
@@ -77,10 +80,9 @@ int main() {
     //printf("%.3f\n\r",getDepth());
     //printf("==============================\n\r");
     create();
-    for(int i=0;i<14;++i)if(minus[i]>0.15f){
+    for(int i=0;i<14;++i)if(minus[i]>0.05f){
         printf("Container found!!\n\rtriggerNum=%i,value=%f,target=%.3f\n\r",i,minus[i],toCM[i]);
         maximum=toCM[i];
-        //printf("final:%f\n",maximum);
         wait(3);
         fillWater(maximum);
         printf("Water filled!!\n\r");
